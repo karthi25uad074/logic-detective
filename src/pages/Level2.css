@@ -1,0 +1,33 @@
+.level2-page{
+  min-height:100vh;
+  background:#050816;
+  color:white;
+  position:relative;
+}
+
+.level2-grid{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(0,183,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,183,255,.06) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+
+.level2-container{
+  position:relative;
+  z-index:2;
+  max-width:1200px;
+  margin:auto;
+  padding:30px;
+  text-align:center;
+}
+
+.or-gate{
+  width:140px;
+  filter:drop-shadow(0 0 20px rgba(0,183,255,.4));
+}
+
+/* Level1 styles reuse pannalam */
+.circuit,.status-grid,.quiz-card,.choices,.wire,.active,.fault-wire,.bulb-area,.bulb-on,.switch-col,.bot-box,.hint,.submit-btn,.selected,.result,.xp-popup{
+}
