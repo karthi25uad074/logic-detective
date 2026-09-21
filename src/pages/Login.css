@@ -1,6 +1,6 @@
 /* ==========================================
-   LEVEL 5 - SMART STREET LIGHT
-   Easy Mode Finale - Cyberpunk AAA
+   LOGIC DETECTIVE LOGIN
+   Cyberpunk 3D Edition
 ========================================== */
 
 *{
@@ -10,573 +10,367 @@
 }
 
 :root{
-  --cyan:#00d4ff;
-  --blue:#1aa7ff;
+  --bg:#020814;
+  --panel:rgba(8,18,40,.72);
+  --cyan:#00e5ff;
+  --blue:#009dff;
   --purple:#7c3aed;
-  --yellow:#ffe600;
-  --bg:#030816;
-  --panel:rgba(9,20,42,.72);
-  --glass:rgba(255,255,255,.06);
-  --border:rgba(0,212,255,.18);
+  --green:#00ff88;
+  --text:#eef9ff;
 }
 
-.level5-page{
+body{
+  background:#020814;
+  overflow-x:hidden;
+}
+
+.login-page{
   min-height:100vh;
-  color:white;
-  position:relative;
-  overflow:hidden;
-  background:
-    radial-gradient(circle at top,#072b55 0%,#020814 45%,#00040b 100%);
-}
-
-/* ================= Background ================= */
-
-.level5-grid{
-  position:absolute;
-  inset:-100%;
-  background:
-    linear-gradient(rgba(0,212,255,.08) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.08) 1px,transparent 1px);
-  background-size:70px 70px;
-  transform:perspective(900px) rotateX(76deg);
-  animation:gridMove 18s linear infinite;
-  opacity:.4;
-}
-
-@keyframes gridMove{
-  from{transform:perspective(900px) rotateX(76deg) translateY(0);}
-  to{transform:perspective(900px) rotateX(76deg) translateY(220px);}
-}
-
-/* Neon rain */
-
-.level5-page::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:repeating-linear-gradient(
-    90deg,
-    transparent 0 110px,
-    rgba(0,212,255,.05) 110px 112px
-  );
-  animation:rain 7s linear infinite;
-}
-
-@keyframes rain{
-  from{transform:translateY(-100%);}
-  to{transform:translateY(100%);}
-}
-
-/* City glow */
-
-.level5-page::after{
-  content:"";
-  position:absolute;
-  left:-20%;
-  bottom:-120px;
-  width:140%;
-  height:300px;
-  background:
-    radial-gradient(circle,#00d4ff55 0%,transparent 60%),
-    radial-gradient(circle,#7c3aed44 0%,transparent 70%);
-  filter:blur(70px);
-  animation:cityGlow 8s ease-in-out infinite;
-}
-
-@keyframes cityGlow{
-  50%{transform:scale(1.08);}
-}
-
-/* ================= Container ================= */
-
-.level-container{
-  position:relative;
-  z-index:2;
-  max-width:1250px;
-  margin:auto;
-  padding:35px;
-}
-
-/* ================= Intro ================= */
-
-.mission-intro{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.82);
-  backdrop-filter:blur(16px);
   display:flex;
   justify-content:center;
   align-items:center;
-  z-index:100;
+  padding:30px;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at top,#0a2c66 0%,#041122 40%,#01040a 100%);
 }
 
-.intro-card{
-  width:520px;
-  padding:40px;
-  border-radius:28px;
-  text-align:center;
-  background:linear-gradient(180deg,#09192f,#030814);
-  border:1px solid rgba(0,212,255,.25);
+/* ==========================================
+   3D Moving Grid Floor
+========================================== */
+
+.login-grid{
+  position:absolute;
+  inset:-120%;
+  background:
+    linear-gradient(rgba(0,229,255,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.08) 1px,transparent 1px);
+  background-size:55px 55px;
+  transform:perspective(900px) rotateX(76deg);
+  animation:gridMove 14s linear infinite;
+  opacity:.45;
+  pointer-events:none;
+}
+
+@keyframes gridMove{
+  from{
+    transform:perspective(900px) rotateX(76deg) translateY(0);
+  }
+  to{
+    transform:perspective(900px) rotateX(76deg) translateY(220px);
+  }
+}
+
+/* ==========================================
+   Giant Floating Neon Orbs
+========================================== */
+
+.login-page::before,
+.login-page::after{
+  content:"";
+  position:absolute;
+  width:500px;
+  height:500px;
+  border-radius:50%;
+  filter:blur(130px);
+  pointer-events:none;
+}
+
+.login-page::before{
+  background:#00e5ff;
+  left:-180px;
+  top:-180px;
+  opacity:.18;
+  animation:orb1 8s ease-in-out infinite;
+}
+
+.login-page::after{
+  background:#7c3aed;
+  right:-180px;
+  bottom:-180px;
+  opacity:.16;
+  animation:orb2 10s ease-in-out infinite;
+}
+
+@keyframes orb1{
+  50%{
+    transform:translate(60px,-30px) scale(1.15);
+  }
+}
+
+@keyframes orb2{
+  50%{
+    transform:translate(-60px,40px) scale(1.12);
+  }
+}
+
+/* ==========================================
+   Floating Particles
+========================================== */
+
+.login-page span{
+  position:relative;
+}
+
+.login-page::selection{
+  background:var(--cyan);
+  color:black;
+}
+
+/* ==========================================
+   Login Card
+========================================== */
+
+.login-card{
+  position:relative;
+  width:430px;
+  max-width:95%;
+  padding:45px 35px;
+  border-radius:30px;
+  background:var(--panel);
+  backdrop-filter:blur(22px);
+  border:1px solid rgba(0,229,255,.18);
+  overflow:hidden;
   box-shadow:
-    0 0 40px rgba(0,212,255,.28),
-    inset 0 0 30px rgba(0,212,255,.08);
+    0 0 30px rgba(0,229,255,.12),
+    0 0 90px rgba(0,229,255,.08),
+    inset 0 0 30px rgba(255,255,255,.03);
+  z-index:5;
+  transform-style:preserve-3d;
 }
 
-.intro-card span{
-  color:#8ee9ff;
-  letter-spacing:3px;
+/* Animated Neon Border */
+
+.login-card::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:30px;
+  padding:2px;
+  background:
+    linear-gradient(140deg,
+      var(--cyan),
+      transparent 35%,
+      var(--purple),
+      transparent 75%,
+      var(--cyan));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:borderSpin 6s linear infinite;
 }
 
-.intro-card h1{
-  font-size:46px;
-  margin:16px 0;
-  background:linear-gradient(90deg,#fff,#8ee9ff,#00d4ff);
+@keyframes borderSpin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* Glass Shine */
+
+.login-card::after{
+  content:"";
+  position:absolute;
+  width:220%;
+  height:220%;
+  top:-80%;
+  left:-80%;
+  background:
+    linear-gradient(
+      115deg,
+      transparent,
+      rgba(255,255,255,.08),
+      transparent
+    );
+  transform:rotate(25deg);
+  animation:shine 7s linear infinite;
+}
+
+@keyframes shine{
+  from{
+    transform:translateX(-60%) rotate(25deg);
+  }
+  to{
+    transform:translateX(60%) rotate(25deg);
+  }
+}
+
+/* ==========================================
+   Logo
+========================================== */
+
+.login-logo{
+  display:flex;
+  justify-content:center;
+  margin-bottom:20px;
+}
+
+.login-logo svg{
+  filter:
+    drop-shadow(0 0 12px var(--cyan))
+    drop-shadow(0 0 35px rgba(0,229,255,.45));
+  animation:logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat{
+  50%{
+    transform:translateY(-8px) scale(1.05);
+  }
+}
+
+/* ==========================================
+   Titles
+========================================== */
+
+.login-title{
+  text-align:center;
+  font-size:3rem;
+  line-height:1;
+  margin-bottom:12px;
+  background:
+    linear-gradient(90deg,#fff,#8ee9ff,#00e5ff);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
 
-.intro-card p{
-  margin:10px 0;
-  color:#c7d6e5;
-}
-
-.intro-card button{
-  margin-top:28px;
-  padding:16px 34px;
-  border:none;
-  border-radius:16px;
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-  box-shadow:0 0 28px rgba(0,212,255,.45);
-}
-
-/* ================= HUD ================= */
-
-.hud-top{
-  display:flex;
-  gap:18px;
-  justify-content:center;
-  flex-wrap:wrap;
-  margin-bottom:30px;
-}
-
-.hud-box{
-  padding:14px 26px;
-  border-radius:18px;
-  background:var(--panel);
-  backdrop-filter:blur(16px);
-  border:1px solid var(--border);
-  box-shadow:0 0 20px rgba(0,212,255,.15);
-}
-
-.hud-box.danger{
-  color:#ff7070;
-}
-
-/* ================= Mission Header ================= */
-
-.mission-head{
+.login-subtitle{
   text-align:center;
+  color:#b8d7ea;
   margin-bottom:35px;
 }
 
-.mission-pill{
-  display:inline-block;
-  padding:10px 22px;
-  border-radius:999px;
-  background:rgba(0,212,255,.08);
-  border:1px solid var(--border);
-  color:#8ee9ff;
-  letter-spacing:3px;
-  box-shadow:0 0 25px rgba(0,212,255,.18);
-}
+/* ==========================================
+   Inputs
+========================================== */
 
-.mission-head h1{
-  margin:22px 0 10px;
-  font-size:56px;
-}
-
-.mission-head p{
-  color:#c6d7e8;
-}
-
-/* ================= Objective Panel ================= */
-
-.objective-panel{
-  background:var(--panel);
-  backdrop-filter:blur(16px);
-  border:1px solid var(--border);
-  border-radius:24px;
-  padding:28px;
-  margin:30px 0;
-}
-
-.objective-panel h3{
-  color:#8ee9ff;
+.input-box{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  height:60px;
+  padding:0 18px;
   margin-bottom:18px;
-}
-
-.objective-list{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:18px;
-}
-
-.objective{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding:16px;
-  border-radius:16px;
+  border-radius:18px;
   background:rgba(255,255,255,.04);
+  border:1px solid rgba(0,229,255,.15);
   transition:.3s;
 }
 
-.objective:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 18px rgba(0,212,255,.25);
+.input-box:hover,
+.input-box:focus-within{
+  border-color:rgba(0,229,255,.45);
+  box-shadow:0 0 22px rgba(0,229,255,.18);
+  transform:translateY(-2px);
 }
 
-/* ================= Logic Bot ================= */
-
-.logic-bot{
-  display:flex;
-  gap:20px;
-  align-items:flex-start;
-  margin:35px 0;
+.input-box svg{
+  color:#7fe8ff;
+  min-width:22px;
 }
 
-.bot-avatar{
-  width:85px;
-  height:85px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:42px;
-  background:rgba(0,212,255,.08);
-  box-shadow:0 0 30px rgba(0,212,255,.28);
-  animation:botFloat 3s ease-in-out infinite;
-}
-
-@keyframes botFloat{
-  50%{transform:translateY(-8px);}
-}
-
-.bot-box{
+.input-box input{
   flex:1;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:22px;
-  backdrop-filter:blur(16px);
-}
-
-.bot-box button{
-  margin-top:16px;
-  padding:10px 18px;
   border:none;
-  border-radius:12px;
-  background:var(--cyan);
-  color:black;
-  cursor:pointer;
-}
-
-.hint{
-  margin-top:14px;
-  padding:14px;
-  border-left:4px solid var(--cyan);
-  background:rgba(0,212,255,.08);
-  border-radius:12px;
-}
-
-/* ================= Status Cards ================= */
-
-.status-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:22px;
-  margin:35px 0;
-}
-
-.status-card{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:28px;
-  text-align:center;
-  backdrop-filter:blur(16px);
-}
-
-.status-card h2{
-  font-size:52px;
-  color:var(--cyan);
-}
-
-.status-card.danger h2{
-  color:#ff5f7a;
-}
-
-/* ================= Circuit Panel ================= */
-
-.circuit-panel{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-  margin:55px 0;
-}
-
-.switch-column{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
-}
-
-.switch{
-  width:74px;
-  height:74px;
-  border:none;
-  border-radius:50%;
-  font-size:28px;
-  font-weight:bold;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.switch.on{
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  color:black;
-  box-shadow:0 0 25px var(--cyan);
-}
-
-.switch.off{
-  background:#1d2b45;
+  outline:none;
+  background:transparent;
   color:white;
+  font-size:15px;
 }
 
-.switch:hover{
-  transform:scale(1.08);
+.input-box input::placeholder{
+  color:#8aa4b8;
 }
 
-.wire{
-  width:90px;
-  height:6px;
-  border-radius:999px;
-  position:relative;
-  overflow:hidden;
-  background:#163a56;
-}
+/* ==========================================
+   Login Button
+========================================== */
 
-.wire.active{
-  background:linear-gradient(90deg,var(--cyan),#7fe8ff,var(--cyan));
-  box-shadow:0 0 18px var(--cyan);
-}
-
-.fault-wire{
-  background:linear-gradient(90deg,#ff3b3b,#ff6b6b,#ff3b3b);
-  box-shadow:0 0 18px #ff3b3b;
-}
-
-.wire::before{
-  content:"";
-  position:absolute;
-  width:28px;
-  height:100%;
-  background:white;
-  filter:blur(1px);
-  animation:flow 1s linear infinite;
-}
-
-@keyframes flow{
-  from{left:-30px;}
-  to{left:100%;}
-}
-
-/* NOR Gate */
-
-.gate-wrapper{
-  width:190px;
-  height:140px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.nor-gate{
-  width:180px;
-  filter:
-    drop-shadow(0 0 10px var(--cyan))
-    drop-shadow(0 0 30px rgba(0,212,255,.35));
-}
-
-/* Street Light */
-
-.street-light{
-  width:92px;
-  height:92px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.light-on{
-  background:radial-gradient(circle,var(--yellow),#ffb800);
-  color:black;
-  box-shadow:
-    0 0 35px var(--yellow),
-    0 0 90px rgba(255,230,0,.55);
-}
-
-.light-off{
-  background:#2f3646;
-  color:#aaa;
-}
-
-/* ================= Quiz ================= */
-
-.quiz-card{
-  position:relative;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:28px;
-  padding:34px;
-  backdrop-filter:blur(18px);
-  overflow:hidden;
-}
-
-.quiz-card::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(120deg,transparent,rgba(255,255,255,.05),transparent);
-  transform:translateX(-100%);
-  animation:shine 6s linear infinite;
-}
-
-@keyframes shine{
-  to{transform:translateX(100%);}
-}
-
-.choices{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-  margin:26px 0;
-}
-
-.choices button{
-  padding:16px;
-  border:none;
-  border-radius:16px;
-  background:#14223b;
-  color:white;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.choices button:hover{
-  transform:translateY(-3px);
-}
-
-.selected{
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  color:black!important;
-}
-
-.submit-btn{
+.login-btn{
   width:100%;
-  padding:18px;
+  height:58px;
   border:none;
-  border-radius:16px;
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  color:black;
-  font-weight:bold;
+  border-radius:18px;
+  margin-top:8px;
+  font-size:16px;
+  font-weight:700;
   cursor:pointer;
-  box-shadow:0 0 30px rgba(0,212,255,.35);
-}
-
-.result{
-  margin-top:22px;
-  padding:16px;
-  border-radius:14px;
-  background:rgba(0,212,255,.08);
-  border-left:4px solid var(--cyan);
-}
-
-.xp-popup{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:22px;
-  font-size:34px;
-  color:var(--yellow);
-  text-shadow:0 0 18px var(--yellow);
-}
-
-/* ================= Finale Card ================= */
-
-.easy-complete{
-  margin-top:45px;
-  padding:34px;
-  text-align:center;
-  border-radius:26px;
-  background:linear-gradient(180deg,#101b33,#050a14);
-  border:1px solid rgba(255,215,0,.28);
+  color:#03111f;
+  background:
+    linear-gradient(135deg,var(--cyan),var(--blue));
   box-shadow:
-    0 0 35px rgba(255,215,0,.18),
-    inset 0 0 30px rgba(255,215,0,.05);
+    0 0 30px rgba(0,229,255,.35);
+  transition:.3s;
 }
 
-.easy-complete h2{
-  margin-top:16px;
-  color:#ffd85a;
+.login-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:
+    0 0 35px rgba(0,229,255,.6),
+    0 0 70px rgba(0,229,255,.25);
 }
 
-.easy-complete p{
-  margin-top:10px;
-  color:#d3d8e5;
+.login-btn:disabled{
+  opacity:.7;
+  cursor:not-allowed;
 }
 
-/* ================= Mobile ================= */
+/* ==========================================
+   Error
+========================================== */
+
+.error{
+  display:block;
+  color:#ff7b7b;
+  margin-top:8px;
+  margin-bottom:10px;
+  font-size:.9rem;
+}
+
+/* ==========================================
+   Footer Note
+========================================== */
+
+.login-note{
+  margin-top:24px;
+  text-align:center;
+  color:#9fb9ce;
+  font-size:.92rem;
+  line-height:1.5;
+}
+
+.password-highlight{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 18px;
+  border-radius:999px;
+  background:rgba(0,229,255,.08);
+  border:1px solid rgba(0,229,255,.2);
+  color:#8ee9ff;
+  font-weight:bold;
+  box-shadow:0 0 18px rgba(0,229,255,.18);
+}
+
+/* ==========================================
+   Responsive
+========================================== */
 
 @media(max-width:768px){
 
-.level-container{
-  padding:22px;
-}
+  .login-card{
+    padding:35px 24px;
+  }
 
-.mission-head h1{
-  font-size:38px;
-}
+  .login-title{
+    font-size:2.3rem;
+  }
 
-.logic-bot{
-  flex-direction:column;
-}
+  .login-logo svg{
+    width:52px;
+    height:52px;
+  }
 
-.status-grid{
-  grid-template-columns:1fr;
-}
-
-.circuit-panel{
-  flex-direction:column;
-}
-
-.wire{
-  width:6px;
-  height:48px;
-}
-
-.choices{
-  grid-template-columns:1fr;
-}
-
-.intro-card{
-  width:90%;
-}
 }
