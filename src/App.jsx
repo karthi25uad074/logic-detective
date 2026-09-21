@@ -12,7 +12,7 @@ import Level3 from "./pages/Level3";
 import Level4 from "./pages/Level4";
 import Level5 from "./pages/Level5";
 import Leaderboard from "./pages/Leaderboard";
-
+import Learn from "./pages/Learn";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -50,6 +50,7 @@ export default function App() {
       <Route path="/missions/level4" element={<Level4/>}/>
       <Route path="/missions/level5" element={<Level5/>}/>
       <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/learn" element={<Learn/>}/>
       <Route path="/dashboard" element={<Dashboard user={user} />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

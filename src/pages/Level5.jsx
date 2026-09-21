@@ -1,221 +1,456 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShieldCheck,
+  Zap,
+  Lightbulb,
+  Moon,
+  Sun,
+  Trophy
+} from "lucide-react";
 import Navbar from "./Navbar";
 import "./Level5.css";
 
-export default function Level5(){
+export default function Level5() {
 
-const navigate=useNavigate();
+  const navigate = useNavigate();
 
-const [user,setUser]=useState(null);
+  const [user,setUser]=useState(null);
 
-const [timer,setTimer]=useState(90);
-const [lives,setLives]=useState(3);
+  const [motionSensor,setMotionSensor]=useState(0);
+  const [daylight,setDaylight]=useState(0);
 
-const [answer,setAnswer]=useState("");
-const [message,setMessage]=useState("");
+  const [answer,setAnswer]=useState("");
+  const [message,setMessage]=useState("");
 
-const [hintStep,setHintStep]=useState(0);
-const [showCertificate,setShowCertificate]=useState(false);
+  const [intro,setIntro]=useState(true);
+  const [timer,setTimer]=useState(90);
+  const [attempts,setAttempts]=useState(5);
 
-useEffect(()=>{
-supabase.auth.getUser().then(({data})=>setUser(data.user));
-},[]);
+  const [showHint,setShowHint]=useState(false);
+  const [xpAnim,setXpAnim]=useState(false);
 
-useEffect(()=>{
-if(timer<=0)return;
+  const expected=!(motionSensor||daylight)?1:0;
+  const observed=0;
 
-const i=setInterval(()=>{
-setTimer(t=>t-1);
-},1000);
+  useEffect(()=>{
+    supabase.auth.getUser().then(({data})=>setUser(data.user));
+  },[]);
 
-return()=>clearInterval(i);
+  useEffect(()=>{
+    if(intro)return;
 
-},[timer]);
+    if(timer<=0){
+      setMessage("⏳ Street lights failed.");
+      return;
+    }
 
-const hints=[
-"The fault isn't in the first gate.",
-"Compare XOR expected vs observed.",
-"XOR should output HIGH when inputs differ."
-];
+    const t=setTimeout(()=>setTimer(v=>v-1),1000);
+    return()=>clearTimeout(t);
 
-async function finishGame(){
+  },[timer,intro]);
 
-const {data}=await supabase
-.from("progress")
-.select("*")
-.eq("user_id",user.id)
-.single();
+  function beep(success=true){
 
-if(data.completed_missions.includes("level5")){
-setMessage("Already completed.");
-return false;
-}
+    const ctx=new AudioContext();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
 
-await supabase
-.from("progress")
-.update({
-xp:data.xp+500,
-completed_levels:5,
-completed_missions:[...data.completed_missions,"level5"]
-})
-.eq("user_id",user.id);
+    osc.type=success?"triangle":"sawtooth";
+    osc.frequency.value=success?900:240;
 
-return true;
-}
+    osc.connect(gain);
+    gain.connect(ctx.destination);
 
-async function submit(){
+    gain.gain.value=.08;
 
-if(answer!=="XOR"){
+    osc.start();
+    osc.stop(ctx.currentTime+.18);
 
-const remain=lives-1;
+  }
 
-setLives(remain);
+  async function completeMission(){
 
-if(remain<=0){
-setMessage("Mission Failed.");
-}
+    if(!user)return false;
 
-return;
-}
+    const {data}=await supabase
+      .from("progress")
+      .select("*")
+      .eq("user_id",user.id)
+      .single();
 
-const ok=await finishGame();
+    if(!data)return false;
 
-if(!ok)return;
+    if(data.completed_missions?.includes("level5")){
+      setMessage("🏆 Easy Mode already completed.");
+      return false;
+    }
 
-setMessage("🏆 Smart City Saved!");
+    await supabase
+      .from("progress")
+      .update({
+        xp:data.xp+150,
+        completed_levels:Math.max(data.completed_levels,5),
+        completed_missions:[...(data.completed_missions||[]),"level5"]
+      })
+      .eq("user_id",user.id);
 
-setShowCertificate(true);
+    return true;
+  }
 
-}
+  async function handleSubmit(){
 
-return(
+    if(timer<=0)return;
 
-<div className="boss-page">
+    if(answer!=="SA0"){
 
-<div className="boss-grid"></div>
+      beep(false);
+      setAttempts(p=>p-1);
 
-<Navbar/>
+      if(attempts<=1){
+        setMessage("💥 City blackout.");
+      }else{
+        setMessage(`❌ Wrong Diagnosis. Attempts Left: ${attempts-1}`);
+      }
 
-<div className="boss-container">
+      return;
+    }
 
-<span className="boss-badge">FINAL BOSS</span>
+    const ok=await completeMission();
+    if(!ok)return;
 
-<h1>The Blackout Protocol</h1>
+    beep(true);
+    setXpAnim(true);
 
-<div className="hud">
+    setMessage("🏆 EASY MODE COMPLETED! +150 XP");
 
-<div>⏱ {timer}s</div>
+    setTimeout(()=>navigate("/missions"),4000);
 
-<div>❤️ {"❤️".repeat(lives)}</div>
+  }
 
-<div>⚡ Reward:500 XP</div>
+  return(
+    <div className="level5-page">
 
-</div>
+      <div className="level5-grid"></div>
 
-<div className="logicbot">
+      <Navbar/>
 
-🤖 {hints[hintStep]}
+      <AnimatePresence>
 
-<button onClick={()=>setHintStep(Math.min(hintStep+1,2))}>
-Next Hint
-</button>
+        {intro&&(
 
-</div>
+          <motion.div
+            className="mission-intro"
+            initial={{opacity:1}}
+            exit={{opacity:0}}
+          >
 
-<div className="triple-circuit">
+            <motion.div
+              className="intro-card"
+              initial={{scale:.8}}
+              animate={{scale:1}}
+            >
 
-<div className="gate and">AND</div>
+              <span>MISSION 05</span>
 
-<div className="wire active"></div>
+              <h1>SMART STREET LIGHT</h1>
 
-<div className="gate xor faultgate">XOR</div>
+              <p>🌃 Smart City lighting network failed.</p>
 
-<div className="wire fault"></div>
+              <p>NOR Gate controls automatic street lights.</p>
 
-<div className="gate nor">NOR</div>
+              <p>Complete Easy Mode.</p>
 
-</div>
+              <button onClick={()=>setIntro(false)}>
+                START FINAL EASY MISSION
+              </button>
 
-<div className="diagnosis-grid">
+            </motion.div>
 
-<div className="diag">
-<h3>Expected</h3>
-<p>AND:0</p>
-<p>XOR:1</p>
-<p>NOR:0</p>
-</div>
+          </motion.div>
 
-<div className="diag danger">
-<h3>Observed</h3>
-<p>AND:0</p>
-<p>XOR:0</p>
-<p>NOR:1</p>
-</div>
+        )}
 
-</div>
+      </AnimatePresence>
 
-<div className="scope">
+      <div className="level-container">
 
-<h2>Oscilloscope</h2>
+        <div className="hud-top">
 
-<div className="wave"></div>
+          <div className="hud-box">⏱ {timer}s</div>
 
-</div>
+          <div className="hud-box">Attempts {attempts}/5</div>
 
-<div className="quiz">
+          <div className="hud-box danger">CITY DARK</div>
 
-<h2>Which Gate Failed?</h2>
+        </div>
 
-<div className="choices">
+        <div className="mission-head">
 
-{["AND","XOR","NOR"].map(g=>(
+          <span className="mission-pill">
+            SMART CITY CONTROL
+          </span>
 
-<button
-key={g}
-className={answer===g?"selected":""}
-onClick={()=>setAnswer(g)}
->
+          <h1>Smart Street Light</h1>
 
-{g}
+          <p>Street lights should turn ON only when both inputs are OFF.</p>
 
-</button>
+        </div>
 
-))}
+        <div className="objective-panel">
 
-</div>
+          <h3>Mission Objectives</h3>
 
-<button className="submit" onClick={submit}>
-Save the City
-</button>
+          <div className="objective-list">
 
-{message&&<div className="result">{message}</div>}
+            <div className="objective">
+              <ShieldCheck size={18}/>
+              Restore lighting.
+            </div>
 
-</div>
+            <div className="objective">
+              <Moon size={18}/>
+              Test night logic.
+            </div>
 
-{showCertificate&&(
+            <div className="objective">
+              <Zap size={18}/>
+              Find hidden fault.
+            </div>
 
-<div className="certificate">
+          </div>
 
-<h1>🏆 Certified Circuit Detective</h1>
+        </div>
 
-<p>Mission Completed Successfully</p>
+        <div className="logic-bot">
 
-<p>Total XP:1000</p>
+          <div className="bot-avatar">🤖</div>
 
-<button onClick={()=>navigate("/dashboard")}>
-Go to Dashboard
-</button>
+          <div className="bot-box">
 
-</div>
+            <strong>Logic Bot</strong>
 
-)}
+            <p>
+              NOR outputs HIGH only when every input is LOW.
+            </p>
 
-</div>
+            <button onClick={()=>setShowHint(!showHint)}>
+              {showHint?"Hide Hint":"Need Hint?"}
+            </button>
 
-</div>
+            <AnimatePresence>
 
-);
+              {showHint&&(
 
+                <motion.div
+                  className="hint"
+                  initial={{opacity:0,y:-10}}
+                  animate={{opacity:1,y:0}}
+                  exit={{opacity:0}}
+                >
+                  💡 Motion=0 and Daylight=0 should turn ON the street light.
+                </motion.div>
+
+              )}
+
+            </AnimatePresence>
+
+          </div>
+
+        </div>
+
+        <div className="status-grid">
+
+          <div className="status-card">
+            <span>Expected</span>
+            <h2>{expected}</h2>
+          </div>
+
+          <div className="status-card danger">
+            <span>Observed</span>
+            <h2>{observed}</h2>
+          </div>
+
+        </div>
+
+        <div className="circuit-panel">
+
+          <div className="switch-column">
+
+            <span>Motion</span>
+
+            <button
+              className={motionSensor?"switch on":"switch off"}
+              onClick={()=>setMotionSensor(motionSensor?0:1)}
+            >
+              {motionSensor}
+            </button>
+
+          </div>
+
+          <div className={`wire ${motionSensor?"active":""}`}></div>
+
+          <div className="gate-wrapper">
+
+            <motion.svg
+              viewBox="0 0 140 140"
+              className="nor-gate"
+              animate={{rotate:[0,.5,-.5,0]}}
+              transition={{repeat:Infinity,duration:2}}
+            >
+
+              <path
+                d="M18 20 Q45 70 18 120 Q75 130 118 70 Q75 10 18 20"
+                fill="#08182f"
+                stroke="#00d4ff"
+                strokeWidth="4"
+              />
+
+              <circle
+                cx="120"
+                cy="70"
+                r="6"
+                fill="#08182f"
+                stroke="#00d4ff"
+                strokeWidth="3"
+              />
+
+              <text
+                x="38"
+                y="75"
+                fill="#63cfff"
+                fontSize="20"
+                fontWeight="bold"
+              >
+                NOR
+              </text>
+
+            </motion.svg>
+
+          </div>
+
+          <div className={`wire ${observed?"active":"fault-wire"}`}></div>
+
+          <div className="bulb-area">
+
+            <motion.div
+              className={`street-light ${observed?"light-on":"light-off"}`}
+              animate={observed?{scale:[1,1.08,1]}:{}}
+              transition={{repeat:Infinity,duration:.8}}
+            >
+              <Lightbulb size={34}/>
+            </motion.div>
+
+            <span>Street Light</span>
+
+          </div>
+
+          <div className={`wire ${daylight?"active":""}`}></div>
+
+          <div className="switch-column">
+
+            <span>Daylight</span>
+
+            <button
+              className={daylight?"switch on":"switch off"}
+              onClick={()=>setDaylight(daylight?0:1)}
+            >
+              {daylight}
+            </button>
+
+          </div>
+
+        </div>
+
+        <motion.div
+          className="quiz-card"
+          whileHover={{scale:1.01}}
+        >
+
+          <h2>Identify the Fault</h2>
+
+          <p>
+            The street light never turns ON.
+            Which hidden fault forces the output LOW?
+          </p>
+
+          <div className="choices">
+
+            {["None","SA0","SA1"].map(opt=>(
+
+              <button
+                key={opt}
+                className={answer===opt?"selected":""}
+                onClick={()=>setAnswer(opt)}
+              >
+                {opt}
+              </button>
+
+            ))}
+
+          </div>
+
+          <button
+            className="submit-btn"
+            onClick={handleSubmit}
+          >
+            Complete Easy Mode
+          </button>
+
+          <AnimatePresence>
+
+            {message&&(
+
+              <motion.div
+                className="result"
+                initial={{opacity:0}}
+                animate={{opacity:1}}
+              >
+                {message}
+              </motion.div>
+
+            )}
+
+          </AnimatePresence>
+
+          <AnimatePresence>
+
+            {xpAnim&&(
+
+              <motion.div
+                className="xp-popup"
+                initial={{scale:.5,y:40}}
+                animate={{scale:1.2,y:-70}}
+                exit={{opacity:0}}
+              >
+                +150 XP ⚡
+              </motion.div>
+
+            )}
+
+          </AnimatePresence>
+
+        </motion.div>
+
+        <motion.div
+          className="easy-complete"
+          initial={{opacity:0,y:40}}
+          animate={{opacity:1,y:0}}
+          transition={{delay:1}}
+        >
+
+          <Trophy size={48} color="#FFD700"/>
+
+          <h2>Easy Mode Finale</h2>
+
+          <p>Complete this mission to unlock Detective Mode (Levels 6–15).</p>
+
+        </motion.div>
+
+      </div>
+
+    </div>
+  );
 }

@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShieldCheck,
+  Fingerprint,
+  Lock,
+  Unlock,
+  Search,
+  Zap,
+} from "lucide-react";
 import Navbar from "./Navbar";
 import "./Level3.css";
 
@@ -8,44 +17,44 @@ export default function Level3() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
-  const [a, setA] = useState(1);
-  const [b, setB] = useState(1);
 
+  const [fingerprint, setFingerprint] = useState(0);
   const [answer, setAnswer] = useState("");
   const [message, setMessage] = useState("");
 
-  const [timer, setTimer] = useState(45);
-  const [lives, setLives] = useState(3);
+  const [intro, setIntro] = useState(true);
+  const [timer, setTimer] = useState(90);
+  const [attempts, setAttempts] = useState(5);
+
   const [showHint, setShowHint] = useState(false);
   const [xpAnim, setXpAnim] = useState(false);
 
-  const expected = a ^ b;
-  const observed = 1; // Hidden SA1
+  const expected = fingerprint ? 0 : 1;
+  const observed = 0; // Hidden SA0
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
 
   useEffect(() => {
+    if (intro) return;
+
     if (timer <= 0) {
-      setMessage("⏰ Mission Failed! Time Over.");
+      setMessage("⏳ Vault permanently locked. Mission Failed.");
       return;
     }
 
-    const interval = setInterval(() => {
-      setTimer((t) => t - 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timer]);
+    const t = setTimeout(() => setTimer((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timer, intro]);
 
   function beep(success = true) {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = success ? "triangle" : "square";
-    osc.frequency.value = success ? 850 : 250;
+    osc.type = success ? "triangle" : "sawtooth";
+    osc.frequency.value = success ? 820 : 220;
 
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -53,32 +62,31 @@ export default function Level3() {
     gain.gain.value = 0.08;
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.2);
+    osc.stop(ctx.currentTime + 0.18);
   }
 
   async function completeMission() {
+    if (!user) return false;
+
     const { data } = await supabase
       .from("progress")
       .select("*")
       .eq("user_id", user.id)
       .single();
 
-    if (!data.completed_missions?.includes("level2")) {
-      setMessage("❌ Complete Level 2 first.");
-      return false;
-    }
+    if (!data) return false;
 
     if (data.completed_missions?.includes("level3")) {
-      setMessage("✅ Level 3 already completed.");
+      setMessage("✅ Mission already completed.");
       return false;
     }
 
     await supabase
       .from("progress")
       .update({
-        xp: data.xp + 150,
+        xp: data.xp + 100,
         completed_levels: Math.max(data.completed_levels, 3),
-        completed_missions: [...data.completed_missions, "level3"],
+        completed_missions: [...(data.completed_missions || []), "level3"],
       })
       .eq("user_id", user.id);
 
@@ -86,30 +94,28 @@ export default function Level3() {
   }
 
   async function handleSubmit() {
-    if (answer !== "SA1") {
+    if (timer <= 0) return;
+
+    if (answer !== "SA0") {
       beep(false);
+      setAttempts((p) => p - 1);
 
-      const newLives = lives - 1;
-      setLives(newLives);
-
-      if (newLives <= 0) {
-        setMessage("💀 Mission Failed! No Lives Left.");
+      if (attempts <= 1) {
+        setMessage("💥 Security lockdown activated!");
       } else {
-        setMessage(`❌ Wrong! ${newLives} lives remaining.`);
+        setMessage(`❌ Wrong Diagnosis. Attempts Left: ${attempts - 1}`);
       }
-
       return;
     }
 
-    const awarded = await completeMission();
-
-    if (!awarded) return;
+    const ok = await completeMission();
+    if (!ok) return;
 
     beep(true);
     setXpAnim(true);
-    setMessage("🎉 XOR Mystery Solved! +150 XP");
+    setMessage("🔓 VAULT ACCESS RESTORED! +100 XP");
 
-    setTimeout(() => navigate("/missions"), 2500);
+    setTimeout(() => navigate("/missions"), 3500);
   }
 
   return (
@@ -118,20 +124,71 @@ export default function Level3() {
 
       <Navbar />
 
-      <div className="level3-container">
+      <AnimatePresence>
+        {intro && (
+          <motion.div
+            className="mission-intro"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="intro-card"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+            >
+              <span>MISSION 03</span>
 
-        <span className="mission-pill">MISSION 03</span>
+              <h1>SECURITY LOCK</h1>
 
-        <h1>XOR Mystery</h1>
+              <p>🔒 Research Vault access has been denied.</p>
+              <p>Fingerprint scanner is connected through a NOT Gate.</p>
+              <p>Restore access before the security system locks forever.</p>
 
-        <p>Repair the smart security door.</p>
+              <button onClick={() => setIntro(false)}>
+                START MISSION ⚡
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <div className="hud">
+      <div className="level-container">
 
-          <div className="hud-card">⏱ {timer}s</div>
+        <div className="hud-top">
+          <div className="hud-box">⏱ {timer}s</div>
+          <div className="hud-box">Attempts {attempts}/5</div>
+          <div className="hud-box danger">🔒 LOCKDOWN</div>
+        </div>
 
-          <div className="hud-card">❤️ {"❤️".repeat(lives)}</div>
+        <div className="mission-head">
+          <span className="mission-pill">RESEARCH VAULT CONTROL</span>
 
+          <h1>Security Lock (NOT Gate)</h1>
+
+          <p>NOT Gate always gives the opposite output.</p>
+        </div>
+
+        <div className="objective-panel">
+          <h3>Mission Objectives</h3>
+
+          <div className="objective-list">
+
+            <div className="objective">
+              <ShieldCheck size={18}/>
+              Restore vault access.
+            </div>
+
+            <div className="objective">
+              <Fingerprint size={18}/>
+              Test fingerprint scanner.
+            </div>
+
+            <div className="objective">
+              <Search size={18}/>
+              Find hidden fault.
+            </div>
+
+          </div>
         </div>
 
         <div className="logic-bot">
@@ -142,69 +199,28 @@ export default function Level3() {
 
             <strong>Logic Bot</strong>
 
-            <p>XOR becomes HIGH only when inputs are different.</p>
+            <p>
+              NOT Gate should invert the fingerprint signal.
+              Something is preventing the vault from unlocking.
+            </p>
 
             <button onClick={() => setShowHint(!showHint)}>
               {showHint ? "Hide Hint" : "Need Hint?"}
             </button>
 
-            {showHint && (
-              <div className="hint">
-                When A=1 and B=1, XOR should output 0.
-              </div>
-            )}
+            <AnimatePresence>
+              {showHint && (
+                <motion.div
+                  className="hint"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  💡 If input is 0, NOT Gate outputs 1.
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          </div>
-
-        </div>
-
-        <div className="circuit">
-
-          <div className="switch-col">
-            <span>A</span>
-            <button onClick={() => setA(a ? 0 : 1)}>{a}</button>
-          </div>
-
-          <div className={`wire ${a ? "active" : ""}`}></div>
-
-          <svg className="xor-gate" viewBox="0 0 160 140">
-
-            <path
-              d="M25 20 Q60 70 25 120"
-              fill="none"
-              stroke="#00b7ff"
-              strokeWidth="3"
-            />
-
-            <path
-              d="M40 20 Q75 70 40 120 L90 120 Q145 70 90 20 Z"
-              fill="#0b1835"
-              stroke="#00b7ff"
-              strokeWidth="4"
-            />
-
-            <text
-              x="72"
-              y="76"
-              fill="#63cfff"
-              fontSize="22"
-              fontWeight="bold"
-            >
-              XOR
-            </text>
-
-          </svg>
-
-          <div className="wire fault-wire"></div>
-
-          <div className="bulb-area">
-            <div className="bulb bulb-on"></div>
-            <span>Door Lock</span>
-          </div>
-
-          <div className="switch-col">
-            <span>B</span>
-            <button onClick={() => setB(b ? 0 : 1)}>{b}</button>
           </div>
 
         </div>
@@ -223,53 +239,102 @@ export default function Level3() {
 
         </div>
 
-        <div className="truth-table-card">
+        <div className="circuit-panel">
 
-          <h2>Live XOR Truth Table</h2>
+          <div className="switch-column">
 
-          <table>
-            <thead>
-              <tr>
-                <th>A</th>
-                <th>B</th>
-                <th>Output</th>
-              </tr>
-            </thead>
+            <span>Fingerprint</span>
 
-            <tbody>
+            <button
+              className={fingerprint ? "switch on" : "switch off"}
+              onClick={() => setFingerprint(fingerprint ? 0 : 1)}
+            >
+              {fingerprint ? (
+                <Fingerprint size={28}/>
+              ) : (
+                <Fingerprint size={28}/>
+              )}
+            </button>
 
-              <tr className={a===0&&b===0?"highlight":""}>
-                <td>0</td><td>0</td><td>0</td>
-              </tr>
+          </div>
 
-              <tr className={a===0&&b===1?"highlight":""}>
-                <td>0</td><td>1</td><td>1</td>
-              </tr>
+          <div className={`wire ${fingerprint ? "active" : ""}`}></div>
 
-              <tr className={a===1&&b===0?"highlight":""}>
-                <td>1</td><td>0</td><td>1</td>
-              </tr>
+          <div className="gate-wrapper">
 
-              <tr className={a===1&&b===1?"highlight":""}>
-                <td>1</td><td>1</td><td>0</td>
-              </tr>
+            <motion.svg
+              viewBox="0 0 140 140"
+              className="not-gate"
+              animate={{ rotate: [0, 0.5, -0.5, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
 
-            </tbody>
-          </table>
+              <path
+                d="M25 20 L25 120 L95 70 Z"
+                fill="#08182f"
+                stroke="#00d4ff"
+                strokeWidth="4"
+              />
+
+              <circle
+                cx="105"
+                cy="70"
+                r="8"
+                fill="#08182f"
+                stroke="#00d4ff"
+                strokeWidth="4"
+              />
+
+              <text
+                x="42"
+                y="78"
+                fill="#63cfff"
+                fontSize="22"
+                fontWeight="bold"
+              >
+                NOT
+              </text>
+
+            </motion.svg>
+
+          </div>
+
+          <div className={`wire ${observed ? "active" : "fault-wire"}`}></div>
+
+          <div className="bulb-area">
+
+            <motion.div
+              className={`vault ${observed ? "vault-open" : "vault-closed"}`}
+              animate={observed ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ repeat: Infinity, duration: 1 }}
+            >
+              {observed ? <Unlock size={34}/> : <Lock size={34}/>}
+            </motion.div>
+
+            <span>Vault Lock</span>
+
+          </div>
 
         </div>
 
-        <div className="quiz-card">
+        <motion.div
+          className="quiz-card"
+          whileHover={{ scale: 1.01 }}
+        >
 
-          <h2>Which Fault Occurred?</h2>
+          <h2>Identify the Fault</h2>
+
+          <p>
+            Why does the vault remain locked even though the NOT Gate should unlock it?
+          </p>
 
           <div className="choices">
 
-            {["None","SA0","SA1"].map(opt=>(
+            {["None","SA0","SA1"].map((opt) => (
               <button
                 key={opt}
-                className={answer===opt?"selected":""}
-                onClick={()=>setAnswer(opt)}
+                className={answer === opt ? "selected" : ""}
+                onClick={() => setAnswer(opt)}
               >
                 {opt}
               </button>
@@ -278,17 +343,37 @@ export default function Level3() {
           </div>
 
           <button className="submit-btn" onClick={handleSubmit}>
-            Diagnose Circuit
+            Diagnose Security Lock
           </button>
 
-          {message && <div className="result">{message}</div>}
+          <AnimatePresence>
+            {message && (
+              <motion.div
+                className="result"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {message}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {xpAnim && <div className="xp-popup">+150 XP ⚡</div>}
+          <AnimatePresence>
+            {xpAnim && (
+              <motion.div
+                className="xp-popup"
+                initial={{ scale: 0.5, y: 40 }}
+                animate={{ scale: 1.2, y: -70 }}
+                exit={{ opacity: 0 }}
+              >
+                +100 XP ⚡
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        </div>
+        </motion.div>
 
       </div>
-
     </div>
   );
 }

@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Timer,
+  BatteryWarning,
+  ShieldCheck,
+  Lightbulb,
+  Zap,
+} from "lucide-react";
 import Navbar from "./Navbar";
 import "./Level1.css";
 
@@ -9,8 +17,13 @@ export default function Level1() {
 
   const [user, setUser] = useState(null);
 
-  const [a, setA] = useState(1);
-  const [b, setB] = useState(1);
+  const [intro, setIntro] = useState(true);
+
+  const [a, setA] = useState(0);
+  const [b, setB] = useState(0);
+
+  const [timer, setTimer] = useState(90);
+  const [attempts, setAttempts] = useState(5);
 
   const [answer, setAnswer] = useState("");
   const [message, setMessage] = useState("");
@@ -19,13 +32,22 @@ export default function Level1() {
   const [xpAnim, setXpAnim] = useState(false);
 
   const expected = a & b;
-  const observed = 0; // Hidden SA0
+  const observed = 0; // Hidden SA0 fault
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
+
+  useEffect(() => {
+    if (intro) return;
+    if (timer <= 0) return;
+
+    const t = setInterval(() => {
+      setTimer((v) => v - 1);
+    }, 1000);
+
+    return () => clearInterval(t);
+  }, [intro, timer]);
 
   function beep(success = true) {
     const ctx = new AudioContext();
@@ -41,64 +63,62 @@ export default function Level1() {
     gain.gain.value = 0.08;
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.2);
+    osc.stop(ctx.currentTime + 0.18);
   }
 
   async function completeMission() {
-  const { data } = await supabase
-    .from("progress")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
+    const { data } = await supabase
+      .from("progress")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-  // First time player
-  if (!data) {
-    await supabase.from("progress").insert({
-      user_id: user.id,
-      xp: 50,
-      completed_levels: 1,
-      completed_missions: ["level1"],
-    });
+    if (!data) {
+      await supabase.from("progress").insert({
+        user_id: user.id,
+        xp: 50,
+        completed_levels: 1,
+        completed_missions: ["level1"],
+      });
+      return true;
+    }
+
+    if (data.completed_missions?.includes("level1")) {
+      setMessage("Mission already completed.");
+      return false;
+    }
+
+    await supabase
+      .from("progress")
+      .update({
+        xp: data.xp + 50,
+        completed_levels: Math.max(data.completed_levels, 1),
+        completed_missions: [...(data.completed_missions || []), "level1"],
+      })
+      .eq("user_id", user.id);
 
     return true;
   }
 
-  // Already completed Level 1
-  if (data.completed_missions?.includes("level1")) {
-    setMessage("✅ Level 1 already completed. No additional XP awarded.");
-    return false;
-  }
-
-  // First completion
-  await supabase
-    .from("progress")
-    .update({
-      xp: data.xp + 50,
-      completed_levels: Math.max(data.completed_levels, 1),
-      completed_missions: [...(data.completed_missions || []), "level1"],
-    })
-    .eq("user_id", user.id);
-
-  return true;
-}
-
   async function handleSubmit() {
-  if (answer !== "SA0") {
-    beep(false);
-    setMessage("❌ Wrong Diagnosis. Observe Expected vs Observed.");
-    return;
+    if (timer <= 0 || attempts <= 0) return;
+
+    if (answer !== "SA0") {
+      beep(false);
+      setAttempts((p) => p - 1);
+      setMessage(`Wrong diagnosis! Attempts left: ${attempts - 1}`);
+      return;
+    }
+
+    const ok = await completeMission();
+    if (!ok) return;
+
+    beep(true);
+    setXpAnim(true);
+    setMessage("Power Restored! +50 XP");
+
+    setTimeout(() => navigate("/missions"), 3000);
   }
-
-  const awarded = await completeMission();
-
-  if (!awarded) return;
-
-  beep(true);
-  setXpAnim(true);
-  setMessage("🎉 Mission Cleared! +50 XP");
-
-  setTimeout(() => navigate("/missions"), 2500);
-}
 
   return (
     <div className="level-page">
@@ -107,12 +127,129 @@ export default function Level1() {
 
       <Navbar />
 
+      <AnimatePresence>
+        {intro && (
+          <motion.div
+            className="mission-intro"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="intro-card"
+              initial={{ scale: 0.85, y: 40 }}
+              animate={{ scale: 1, y: 0 }}
+            >
+              <BatteryWarning size={60} color="#00d4ff" />
+
+              <span>MISSION 01</span>
+
+              <h1>POWER RESTORE</h1>
+
+              <p>
+                Campus Power Control Room has gone OFFLINE.
+              </p>
+
+              <p>
+                Restore electricity before emergency backup fails.
+              </p>
+
+              <button onClick={() => setIntro(false)}>
+                START INVESTIGATION ⚡
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="level-container">
 
+        <div className="hud-top">
+
+          <div className="hud-box">
+            <Timer size={18} />
+            {timer}s
+          </div>
+
+          <div className="hud-box">
+            Attempts {attempts}/5
+          </div>
+
+          <div className="hud-box danger">
+            SYSTEM OFFLINE
+          </div>
+
+        </div>
+
         <div className="mission-head">
-          <span className="mission-pill">MISSION 01</span>
+<div className="objectives-card">
+  <h2>🎯 Mission Objectives</h2>
+
+  <div className="objectives-list">
+
+    <div className="objective-item">
+      <div className="objective-icon">⚡</div>
+      <div className="objective-text">
+        <h4>Restore Power</h4>
+        <p>Bring the control room back online.</p>
+      </div>
+      <span className="objective-status">Pending</span>
+    </div>
+
+    <div className="objective-item">
+      <div className="objective-icon">🔍</div>
+      <div className="objective-text">
+        <h4>Inspect the Circuit</h4>
+        <p>Compare Expected vs Observed Output.</p>
+      </div>
+      <span className="objective-status">Pending</span>
+    </div>
+
+    <div className="objective-item">
+      <div className="objective-icon">🧠</div>
+      <div className="objective-text">
+        <h4>Identify the Fault</h4>
+        <p>Find the hidden SA0 fault.</p>
+      </div>
+      <span className="objective-status">Pending</span>
+    </div>
+
+  </div>
+</div>
+          <span className="mission-pill">
+            CAMPUS POWER CONTROL ROOM
+          </span>
+
           <h1>AND Gate Rescue</h1>
-          <p>Repair the failed circuit before the factory shuts down.</p>
+
+          <p>
+            Restore electricity before the emergency backup shuts down.
+          </p>
+
+        </div>
+
+        <div className="objective-panel">
+
+          <h3>Mission Objectives</h3>
+
+          <div className="objective-list">
+
+            <div className="objective">
+              <ShieldCheck size={18} />
+              Restore power.
+            </div>
+
+            <div className="objective">
+              <Zap size={18} />
+              Find hidden fault.
+            </div>
+
+            <div className="objective">
+              <Lightbulb size={18} />
+              Diagnose correctly.
+            </div>
+
+          </div>
+
         </div>
 
         <div className="logic-bot">
@@ -120,22 +257,45 @@ export default function Level1() {
           <div className="bot-avatar">🤖</div>
 
           <div className="bot-box">
+
             <strong>Logic Bot</strong>
 
             <p>
-              Compare Expected Output with Observed Output.
-              Something is forcing the output LOW.
+              Voltage isn't reaching the bulb. Compare Expected Output with
+              Observed Output.
             </p>
 
             <button onClick={() => setShowHint(!showHint)}>
               {showHint ? "Hide Hint" : "Need Hint?"}
             </button>
 
-            {showHint && (
-              <div className="hint">
-                💡 If A=1 and B=1, an AND gate should output 1.
-              </div>
-            )}
+            <AnimatePresence>
+              {showHint && (
+                <motion.div
+                  className="hint"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  Hint: AND gate produces HIGH only when both inputs are HIGH.
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
+
+        </div>
+
+        <div className="voltage-panel">
+
+          <div>
+            Voltage
+            <h2>{observed ? "5V" : "0V"}</h2>
+          </div>
+
+          <div>
+            Circuit Status
+            <h2>{observed ? "ONLINE" : "OFFLINE"}</h2>
           </div>
 
         </div>
@@ -143,7 +303,6 @@ export default function Level1() {
         <div className="circuit-panel">
 
           <div className="switch-column">
-
             <span>A</span>
 
             <button
@@ -152,48 +311,57 @@ export default function Level1() {
             >
               {a}
             </button>
-
           </div>
 
           <div className={`wire ${a ? "active" : ""}`}></div>
 
           <div className="gate-wrapper">
 
-            <svg viewBox="0 0 140 140" className="and-gate">
-
+            <motion.svg
+              className="and-gate"
+              viewBox="0 0 140 140"
+              animate={{ rotate: [0, 1, -1, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
               <path
                 d="M20 20 L70 20 A50 50 0 0 1 70 120 L20 120 Z"
-                fill="#0b1835"
-                stroke="#00b7ff"
+                fill="#071c3d"
+                stroke="#00d4ff"
                 strokeWidth="4"
               />
 
               <text
                 x="45"
                 y="75"
-                fill="#63cfff"
+                fill="#7fdfff"
                 fontSize="22"
                 fontWeight="bold"
               >
                 AND
               </text>
-
-            </svg>
+            </motion.svg>
 
           </div>
 
-          <div className={`wire ${observed ? "active" : "fault-wire"}`}></div>
+          <div className="wire fault-wire"></div>
 
           <div className="bulb-area">
 
-            <div className={`bulb ${observed ? "bulb-on" : "bulb-off"}`}></div>
+            <motion.div
+              className={`bulb ${observed ? "bulb-on" : "bulb-off"}`}
+              animate={
+                observed
+                  ? { scale: [1, 1.08, 1] }
+                  : { opacity: [0.8, 1, 0.8] }
+              }
+              transition={{ repeat: Infinity, duration: 1 }}
+            />
 
-            <span>Output</span>
+            <span>Power Output</span>
 
           </div>
 
           <div className="switch-column">
-
             <span>B</span>
 
             <button
@@ -202,40 +370,39 @@ export default function Level1() {
             >
               {b}
             </button>
-
           </div>
 
         </div>
 
         <div className="status-grid">
 
-          <div className="status-card">
-            <span>Expected</span>
+          <motion.div className="status-card" whileHover={{ y: -5 }}>
+            <span>Expected Output</span>
             <h2>{expected}</h2>
-          </div>
+          </motion.div>
 
-          <div className="status-card danger">
-            <span>Observed</span>
+          <motion.div className="status-card danger" whileHover={{ y: -5 }}>
+            <span>Observed Output</span>
             <h2>{observed}</h2>
-          </div>
+          </motion.div>
 
         </div>
 
-        <div className="quiz-card">
+        <motion.div className="quiz-card" whileHover={{ scale: 1.01 }}>
 
           <h2>Identify the Fault</h2>
 
           <p>
-            Why is the output staying LOW even though the inputs suggest otherwise?
+            Which hidden fault keeps the output permanently LOW?
           </p>
 
           <div className="choices">
 
-            {["None","SA0","SA1"].map(opt => (
+            {["None", "SA0", "SA1"].map((opt) => (
               <button
                 key={opt}
-                className={answer===opt ? "selected":""}
-                onClick={()=>setAnswer(opt)}
+                className={answer === opt ? "selected" : ""}
+                onClick={() => setAnswer(opt)}
               >
                 {opt}
               </button>
@@ -247,11 +414,32 @@ export default function Level1() {
             Diagnose Circuit
           </button>
 
-          {message && <div className="result">{message}</div>}
+          <AnimatePresence>
+            {message && (
+              <motion.div
+                className="result"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {message}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {xpAnim && <div className="xp-popup">+50 XP ⚡</div>}
+          <AnimatePresence>
+            {xpAnim && (
+              <motion.div
+                className="xp-popup"
+                initial={{ scale: 0.4, y: 40 }}
+                animate={{ scale: 1.2, y: -60 }}
+                exit={{ opacity: 0 }}
+              >
+                +50 XP ⚡
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        </div>
+        </motion.div>
 
       </div>
 

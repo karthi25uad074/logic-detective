@@ -1,111 +1,582 @@
-.login-page{
+/* ==========================================
+   LEVEL 5 - SMART STREET LIGHT
+   Easy Mode Finale - Cyberpunk AAA
+========================================== */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+:root{
+  --cyan:#00d4ff;
+  --blue:#1aa7ff;
+  --purple:#7c3aed;
+  --yellow:#ffe600;
+  --bg:#030816;
+  --panel:rgba(9,20,42,.72);
+  --glass:rgba(255,255,255,.06);
+  --border:rgba(0,212,255,.18);
+}
+
+.level5-page{
   min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  color:white;
   position:relative;
   overflow:hidden;
-  background:#050816;
-  padding:24px;
+  background:
+    radial-gradient(circle at top,#072b55 0%,#020814 45%,#00040b 100%);
 }
 
-.login-grid{
+/* ================= Background ================= */
+
+.level5-grid{
+  position:absolute;
+  inset:-100%;
+  background:
+    linear-gradient(rgba(0,212,255,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.08) 1px,transparent 1px);
+  background-size:70px 70px;
+  transform:perspective(900px) rotateX(76deg);
+  animation:gridMove 18s linear infinite;
+  opacity:.4;
+}
+
+@keyframes gridMove{
+  from{transform:perspective(900px) rotateX(76deg) translateY(0);}
+  to{transform:perspective(900px) rotateX(76deg) translateY(220px);}
+}
+
+/* Neon rain */
+
+.level5-page::before{
+  content:"";
   position:absolute;
   inset:0;
+  background:repeating-linear-gradient(
+    90deg,
+    transparent 0 110px,
+    rgba(0,212,255,.05) 110px 112px
+  );
+  animation:rain 7s linear infinite;
+}
+
+@keyframes rain{
+  from{transform:translateY(-100%);}
+  to{transform:translateY(100%);}
+}
+
+/* City glow */
+
+.level5-page::after{
+  content:"";
+  position:absolute;
+  left:-20%;
+  bottom:-120px;
+  width:140%;
+  height:300px;
   background:
-    linear-gradient(rgba(0,183,255,.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,183,255,.08) 1px, transparent 1px);
-  background-size:40px 40px;
+    radial-gradient(circle,#00d4ff55 0%,transparent 60%),
+    radial-gradient(circle,#7c3aed44 0%,transparent 70%);
+  filter:blur(70px);
+  animation:cityGlow 8s ease-in-out infinite;
 }
 
-.login-card{
-  width:100%;
-  max-width:420px;
-  background:rgba(8,16,40,.9);
-  border:1px solid rgba(0,183,255,.25);
-  border-radius:24px;
-  padding:40px 32px;
+@keyframes cityGlow{
+  50%{transform:scale(1.08);}
+}
+
+/* ================= Container ================= */
+
+.level-container{
+  position:relative;
+  z-index:2;
+  max-width:1250px;
+  margin:auto;
+  padding:35px;
+}
+
+/* ================= Intro ================= */
+
+.mission-intro{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.82);
   backdrop-filter:blur(16px);
-  z-index:1;
-  box-shadow:0 0 35px rgba(0,183,255,.15);
-}
-
-.login-logo{
   display:flex;
   justify-content:center;
-  margin-bottom:10px;
-}
-
-.login-title{
-  text-align:center;
-  font-size:52px;
-  font-weight:800;
-  line-height:.9;
-  color:#63cfff;
-}
-
-.login-subtitle{
-  text-align:center;
-  color:#9fb3c8;
-  margin:18px 0 28px;
-}
-
-.input-box{
-  display:flex;
   align-items:center;
-  gap:12px;
-  background:#0b1835;
-  border:1px solid #17406d;
-  border-radius:14px;
-  padding:14px;
+  z-index:100;
+}
+
+.intro-card{
+  width:520px;
+  padding:40px;
+  border-radius:28px;
+  text-align:center;
+  background:linear-gradient(180deg,#09192f,#030814);
+  border:1px solid rgba(0,212,255,.25);
+  box-shadow:
+    0 0 40px rgba(0,212,255,.28),
+    inset 0 0 30px rgba(0,212,255,.08);
+}
+
+.intro-card span{
+  color:#8ee9ff;
+  letter-spacing:3px;
+}
+
+.intro-card h1{
+  font-size:46px;
+  margin:16px 0;
+  background:linear-gradient(90deg,#fff,#8ee9ff,#00d4ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.intro-card p{
+  margin:10px 0;
+  color:#c7d6e5;
+}
+
+.intro-card button{
+  margin-top:28px;
+  padding:16px 34px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 0 28px rgba(0,212,255,.45);
+}
+
+/* ================= HUD ================= */
+
+.hud-top{
+  display:flex;
+  gap:18px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:30px;
+}
+
+.hud-box{
+  padding:14px 26px;
+  border-radius:18px;
+  background:var(--panel);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  box-shadow:0 0 20px rgba(0,212,255,.15);
+}
+
+.hud-box.danger{
+  color:#ff7070;
+}
+
+/* ================= Mission Header ================= */
+
+.mission-head{
+  text-align:center;
+  margin-bottom:35px;
+}
+
+.mission-pill{
+  display:inline-block;
+  padding:10px 22px;
+  border-radius:999px;
+  background:rgba(0,212,255,.08);
+  border:1px solid var(--border);
+  color:#8ee9ff;
+  letter-spacing:3px;
+  box-shadow:0 0 25px rgba(0,212,255,.18);
+}
+
+.mission-head h1{
+  margin:22px 0 10px;
+  font-size:56px;
+}
+
+.mission-head p{
+  color:#c6d7e8;
+}
+
+/* ================= Objective Panel ================= */
+
+.objective-panel{
+  background:var(--panel);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:28px;
+  margin:30px 0;
+}
+
+.objective-panel h3{
+  color:#8ee9ff;
   margin-bottom:18px;
 }
 
-.input-box input{
+.objective-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+}
+
+.objective{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:16px;
+  border-radius:16px;
+  background:rgba(255,255,255,.04);
+  transition:.3s;
+}
+
+.objective:hover{
+  transform:translateY(-4px);
+  box-shadow:0 0 18px rgba(0,212,255,.25);
+}
+
+/* ================= Logic Bot ================= */
+
+.logic-bot{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+  margin:35px 0;
+}
+
+.bot-avatar{
+  width:85px;
+  height:85px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:42px;
+  background:rgba(0,212,255,.08);
+  box-shadow:0 0 30px rgba(0,212,255,.28);
+  animation:botFloat 3s ease-in-out infinite;
+}
+
+@keyframes botFloat{
+  50%{transform:translateY(-8px);}
+}
+
+.bot-box{
   flex:1;
-  background:transparent;
-  border:none;
-  outline:none;
-  color:white;
-  font-size:15px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:22px;
+  backdrop-filter:blur(16px);
 }
 
-.input-box input::placeholder{
-  color:#7d8ea3;
-}
-
-.login-btn{
-  width:100%;
-  padding:14px;
+.bot-box button{
+  margin-top:16px;
+  padding:10px 18px;
   border:none;
-  border-radius:14px;
-  background:#00b7ff;
+  border-radius:12px;
+  background:var(--cyan);
   color:black;
-  font-size:18px;
-  font-weight:700;
   cursor:pointer;
-  transition:.25s;
 }
 
-.login-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 0 25px rgba(0,183,255,.45);
+.hint{
+  margin-top:14px;
+  padding:14px;
+  border-left:4px solid var(--cyan);
+  background:rgba(0,212,255,.08);
+  border-radius:12px;
 }
 
-.error{
-  display:block;
-  color:#ff6b6b;
-  margin-bottom:12px;
+/* ================= Status Cards ================= */
+
+.status-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:22px;
+  margin:35px 0;
 }
 
-.login-note{
+.status-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:28px;
   text-align:center;
-  margin-top:18px;
-  color:#c7d3df;
-  line-height:1.6;
+  backdrop-filter:blur(16px);
 }
 
-.password-highlight{
-  color:#63cfff;
-  font-weight:700;
+.status-card h2{
+  font-size:52px;
+  color:var(--cyan);
+}
+
+.status-card.danger h2{
+  color:#ff5f7a;
+}
+
+/* ================= Circuit Panel ================= */
+
+.circuit-panel{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:55px 0;
+}
+
+.switch-column{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+.switch{
+  width:74px;
+  height:74px;
+  border:none;
+  border-radius:50%;
+  font-size:28px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.switch.on{
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:black;
+  box-shadow:0 0 25px var(--cyan);
+}
+
+.switch.off{
+  background:#1d2b45;
+  color:white;
+}
+
+.switch:hover{
+  transform:scale(1.08);
+}
+
+.wire{
+  width:90px;
+  height:6px;
+  border-radius:999px;
+  position:relative;
+  overflow:hidden;
+  background:#163a56;
+}
+
+.wire.active{
+  background:linear-gradient(90deg,var(--cyan),#7fe8ff,var(--cyan));
+  box-shadow:0 0 18px var(--cyan);
+}
+
+.fault-wire{
+  background:linear-gradient(90deg,#ff3b3b,#ff6b6b,#ff3b3b);
+  box-shadow:0 0 18px #ff3b3b;
+}
+
+.wire::before{
+  content:"";
+  position:absolute;
+  width:28px;
+  height:100%;
+  background:white;
+  filter:blur(1px);
+  animation:flow 1s linear infinite;
+}
+
+@keyframes flow{
+  from{left:-30px;}
+  to{left:100%;}
+}
+
+/* NOR Gate */
+
+.gate-wrapper{
+  width:190px;
+  height:140px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.nor-gate{
+  width:180px;
+  filter:
+    drop-shadow(0 0 10px var(--cyan))
+    drop-shadow(0 0 30px rgba(0,212,255,.35));
+}
+
+/* Street Light */
+
+.street-light{
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.light-on{
+  background:radial-gradient(circle,var(--yellow),#ffb800);
+  color:black;
+  box-shadow:
+    0 0 35px var(--yellow),
+    0 0 90px rgba(255,230,0,.55);
+}
+
+.light-off{
+  background:#2f3646;
+  color:#aaa;
+}
+
+/* ================= Quiz ================= */
+
+.quiz-card{
+  position:relative;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:28px;
+  padding:34px;
+  backdrop-filter:blur(18px);
+  overflow:hidden;
+}
+
+.quiz-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.05),transparent);
+  transform:translateX(-100%);
+  animation:shine 6s linear infinite;
+}
+
+@keyframes shine{
+  to{transform:translateX(100%);}
+}
+
+.choices{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin:26px 0;
+}
+
+.choices button{
+  padding:16px;
+  border:none;
+  border-radius:16px;
+  background:#14223b;
+  color:white;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.choices button:hover{
+  transform:translateY(-3px);
+}
+
+.selected{
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:black!important;
+}
+
+.submit-btn{
+  width:100%;
+  padding:18px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 0 30px rgba(0,212,255,.35);
+}
+
+.result{
+  margin-top:22px;
+  padding:16px;
+  border-radius:14px;
+  background:rgba(0,212,255,.08);
+  border-left:4px solid var(--cyan);
+}
+
+.xp-popup{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:22px;
+  font-size:34px;
+  color:var(--yellow);
+  text-shadow:0 0 18px var(--yellow);
+}
+
+/* ================= Finale Card ================= */
+
+.easy-complete{
+  margin-top:45px;
+  padding:34px;
+  text-align:center;
+  border-radius:26px;
+  background:linear-gradient(180deg,#101b33,#050a14);
+  border:1px solid rgba(255,215,0,.28);
+  box-shadow:
+    0 0 35px rgba(255,215,0,.18),
+    inset 0 0 30px rgba(255,215,0,.05);
+}
+
+.easy-complete h2{
+  margin-top:16px;
+  color:#ffd85a;
+}
+
+.easy-complete p{
+  margin-top:10px;
+  color:#d3d8e5;
+}
+
+/* ================= Mobile ================= */
+
+@media(max-width:768px){
+
+.level-container{
+  padding:22px;
+}
+
+.mission-head h1{
+  font-size:38px;
+}
+
+.logic-bot{
+  flex-direction:column;
+}
+
+.status-grid{
+  grid-template-columns:1fr;
+}
+
+.circuit-panel{
+  flex-direction:column;
+}
+
+.wire{
+  width:6px;
+  height:48px;
+}
+
+.choices{
+  grid-template-columns:1fr;
+}
+
+.intro-card{
+  width:90%;
+}
 }

@@ -13,35 +13,47 @@ export default function Leaderboard() {
   }, []);
 
   async function loadLeaderboard() {
-    const { data, error } = await supabase
-      .from("students")
-      .select(`
-        roll_no,
-        email,
-        progress (
-          xp,
-          completed_levels
-        )
-      `);
+  setLoading(true);
 
-    if (error) {
-      console.log(error);
-      setLoading(false);
-      return;
-    }
+  // Students table
+  const { data: students, error: studentError } = await supabase
+    .from("students")
+    .select("id, roll_no, email");
 
-    const board = data
-      .map((student) => ({
+  if (studentError) {
+    console.log(studentError);
+    setLoading(false);
+    return;
+  }
+
+  // Progress table
+  const { data: progress, error: progressError } = await supabase
+    .from("progress")
+    .select("user_id, xp, completed_levels");
+
+  if (progressError) {
+    console.log(progressError);
+    setLoading(false);
+    return;
+  }
+
+  // Merge both tables
+  const board = students
+    .map((student) => {
+      const p = progress.find((item) => item.user_id === student.id);
+
+      return {
         roll_no: student.roll_no,
         email: student.email,
-        xp: student.progress?.[0]?.xp || 0,
-        completed_levels: student.progress?.[0]?.completed_levels || 0,
-      }))
-      .sort((a, b) => b.xp - a.xp);
+        xp: p?.xp || 0,
+        completed_levels: p?.completed_levels || 0,
+      };
+    })
+    .sort((a, b) => b.xp - a.xp);
 
-    setLeaders(board);
-    setLoading(false);
-  }
+  setLeaders(board);
+  setLoading(false);
+}
 
   function medal(rank) {
     if (rank === 1) return <Trophy color="#FFD700" size={26} />;
