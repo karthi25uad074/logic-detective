@@ -33,35 +33,35 @@ export default function Missions() {
   const levels = [
     {
       id: 1,
-      title: "AND Gate Rescue",
+      title: "POWER RESTORE",
       xp: 50,
       unlocked: true,
       description: "Find the hidden SA0 fault."
     },
     {
       id: 2,
-      title: "OR Gate Challenge",
+      title: "EMERGENCY ALARM",
       xp: 100,
       unlocked: completedLevels >= 1,
       description: "Unlock after Level 1."
     },
     {
       id: 3,
-      title: "XOR Mystery",
+      title: "SECURITY LOCK",
       xp: 150,
       unlocked: completedLevels >= 2,
       description: "Unlock after Level 2."
     },
     {
       id: 4,
-      title: "NAND & NOR Lab",
+      title: "FACTORY MACHINE",
       xp: 200,
       unlocked: completedLevels >= 3,
       description: "Unlock after Level 3."
     },
     {
       id: 5,
-      title: "Final Boss",
+      title: "SMART STREET LIGHT",
       xp: 500,
       unlocked: completedLevels >= 4,
       description: "Ultimate detective mission."
